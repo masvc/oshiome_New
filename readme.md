@@ -58,10 +58,6 @@ cp .env.example .env
 
 4. 開発サーバーの起動
 ```bash
-# Dockerを使用する場合
-npm run docker:dev
-
-# ローカルで実行する場合
 npm run dev
 ```
 
@@ -98,16 +94,6 @@ npm run type-check
    - 出力ディレクトリの確認
 4. プレビューデプロイの確認（プルリクエスト時）
 5. 本番環境への自動デプロイ（mainブランチへのマージ時）
-
-### Dockerでの本番環境デプロイ
-
-```bash
-# 本番用イメージのビルド
-npm run docker:build
-
-# 本番用コンテナの起動
-npm run docker:prod
-```
 
 ## 基本的なセキュリティ要件
 
@@ -185,10 +171,6 @@ npm run docker:prod
   - [x] .gitignoreの設定
   - [x] ブランチ戦略の確立
   - [x] コミットメッセージ規約の設定
-- [x] Docker環境の構築
-  - [x] 開発環境用Dockerfile
-  - [x] docker-compose.yml
-  - [x] 本番環境用Dockerfile
 - [x] 開発環境の整備
   - [x] ESLint, Prettierの設定
   - [x] 開発用スクリプトの整備

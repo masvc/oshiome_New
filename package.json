@@ -10,10 +10,7 @@
     "format": "prettier --write .",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "docker:dev": "docker-compose up",
-    "docker:build": "docker build -t oshiome:prod -f Dockerfile.prod .",
-    "docker:prod": "docker run -p 3000:3000 oshiome:prod"
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.9.0",
