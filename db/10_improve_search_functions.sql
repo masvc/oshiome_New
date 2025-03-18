@@ -1,3 +1,12 @@
+-- 既存の関数を削除
+DROP FUNCTION IF EXISTS search_projects(text, text, text);
+DROP FUNCTION IF EXISTS search_projects_by_title(text);
+DROP FUNCTION IF EXISTS search_projects_by_description(text);
+DROP FUNCTION IF EXISTS search_projects_by_idol_name(text);
+DROP FUNCTION IF EXISTS get_projects(text, text, integer, integer);
+
+-- 以降の関数作成のSQLを実行
+
 -- プロジェクト検索用の関数（エラー処理付き）
 CREATE OR REPLACE FUNCTION search_projects(
     search_query TEXT,
@@ -12,6 +21,7 @@ RETURNS TABLE (
     current_amount INTEGER,
     start_date TIMESTAMP WITH TIME ZONE,
     end_date TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE,
     creator_nickname TEXT,
     creator_profile_image TEXT,
     like_count BIGINT,
@@ -22,7 +32,7 @@ RETURNS TABLE (
     total_count BIGINT
 ) AS $$
 DECLARE
-    valid_sort_columns TEXT[] := ARRAY['created_at', 'total_amount', 'like_count', 'days_remaining'];
+    valid_sort_columns TEXT[] := ARRAY['created_at', 'current_amount', 'like_count', 'days_remaining'];
     valid_sort_orders TEXT[] := ARRAY['ASC', 'DESC'];
 BEGIN
     -- ソート条件の検証
@@ -49,6 +59,7 @@ BEGIN
             p.current_amount,
             p.start_date,
             p.end_date,
+            p.created_at,
             u.nickname as creator_nickname,
             u.profile_image_url as creator_profile_image,
             psc.like_count,
@@ -63,9 +74,9 @@ BEGIN
             p.status = 'active' 
             AND p.office_status = 'approved'
             AND (
-                to_tsvector('japanese', p.title) @@ to_tsquery('japanese', search_query)
-                OR to_tsvector('japanese', p.description) @@ to_tsquery('japanese', search_query)
-                OR to_tsvector('japanese', u.nickname) @@ to_tsquery('japanese', search_query)
+                p.title &@ search_query
+                OR p.description &@ search_query
+                OR u.nickname &@ search_query
             )
     )
     SELECT 
@@ -73,13 +84,21 @@ BEGIN
         COUNT(*) OVER() as total_count
     FROM search_results sr
     ORDER BY
-        CASE 
-            WHEN sort_by = 'created_at' THEN sr.created_at::TEXT
-            WHEN sort_by = 'total_amount' THEN sr.total_amount::TEXT
-            WHEN sort_by = 'like_count' THEN sr.like_count::TEXT
-            WHEN sort_by = 'days_remaining' THEN sr.days_remaining::TEXT
-            ELSE sr.created_at::TEXT
-        END DESC;
+        CASE WHEN sort_order = 'ASC' THEN
+            CASE 
+                WHEN sort_by = 'created_at' THEN sr.created_at
+                WHEN sort_by = 'current_amount' THEN sr.current_amount
+                WHEN sort_by = 'like_count' THEN sr.like_count
+                WHEN sort_by = 'days_remaining' THEN sr.days_remaining
+            END
+        ELSE
+            CASE 
+                WHEN sort_by = 'created_at' THEN sr.created_at
+                WHEN sort_by = 'current_amount' THEN sr.current_amount
+                WHEN sort_by = 'like_count' THEN sr.like_count
+                WHEN sort_by = 'days_remaining' THEN sr.days_remaining
+            END
+        END;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -98,6 +117,7 @@ RETURNS TABLE (
     current_amount INTEGER,
     start_date TIMESTAMP WITH TIME ZONE,
     end_date TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE,
     creator_nickname TEXT,
     creator_profile_image TEXT,
     like_count BIGINT,
@@ -108,7 +128,7 @@ RETURNS TABLE (
     total_count BIGINT
 ) AS $$
 DECLARE
-    valid_sort_columns TEXT[] := ARRAY['created_at', 'total_amount', 'like_count', 'days_remaining'];
+    valid_sort_columns TEXT[] := ARRAY['created_at', 'current_amount', 'like_count', 'days_remaining'];
     valid_sort_orders TEXT[] := ARRAY['ASC', 'DESC'];
 BEGIN
     -- ソート条件の検証
@@ -139,6 +159,7 @@ BEGIN
             p.current_amount,
             p.start_date,
             p.end_date,
+            p.created_at,
             u.nickname as creator_nickname,
             u.profile_image_url as creator_profile_image,
             psc.like_count,
@@ -158,13 +179,21 @@ BEGIN
         COUNT(*) OVER() as total_count
     FROM project_list pl
     ORDER BY
-        CASE 
-            WHEN sort_by = 'created_at' THEN pl.created_at::TEXT
-            WHEN sort_by = 'total_amount' THEN pl.total_amount::TEXT
-            WHEN sort_by = 'like_count' THEN pl.like_count::TEXT
-            WHEN sort_by = 'days_remaining' THEN pl.days_remaining::TEXT
-            ELSE pl.created_at::TEXT
-        END DESC
+        CASE WHEN sort_order = 'ASC' THEN
+            CASE 
+                WHEN sort_by = 'created_at' THEN pl.created_at
+                WHEN sort_by = 'current_amount' THEN pl.current_amount
+                WHEN sort_by = 'like_count' THEN pl.like_count
+                WHEN sort_by = 'days_remaining' THEN pl.days_remaining
+            END
+        ELSE
+            CASE 
+                WHEN sort_by = 'created_at' THEN pl.created_at
+                WHEN sort_by = 'current_amount' THEN pl.current_amount
+                WHEN sort_by = 'like_count' THEN pl.like_count
+                WHEN sort_by = 'days_remaining' THEN pl.days_remaining
+            END
+        END
     LIMIT limit_count
     OFFSET offset_count;
 END;

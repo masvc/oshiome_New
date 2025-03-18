@@ -37,7 +37,7 @@ SELECT
     (SELECT COUNT(*) FROM project_likes WHERE project_id = p.id) as like_count,
     (SELECT COUNT(*) FROM project_supports WHERE project_id = p.id) as supporter_count,
     CASE 
-        WHEN p.creator_id = current_user_id THEN true
+        WHEN p.creator_id = auth.uid() THEN true
         WHEN p.status = 'active' AND p.office_status = 'approved' THEN true
         ELSE false
     END as is_accessible
